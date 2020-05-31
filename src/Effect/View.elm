@@ -3,15 +3,15 @@ module Effect.View exposing (Msg, update, viewEffects)
 import Dict
 import Effect
 import Effect.Types
+import FeatherIcons
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Json.Decode as D
-import FeatherIcons
-import Validate
+
 
 type Msg
-    = SetType Int (Maybe Effect.Type)
+    = SetType Int (Maybe Effect)
     | SetParam Int String Int
     | AddEffect
     | RemoveEffect
@@ -51,7 +51,7 @@ update msg effects =
             List.take (List.length effects - 1) effects
 
 
-effectFromId : String -> Maybe Effect.Type
+effectFromId : String -> Maybe Effect
 effectFromId id =
     List.head <| List.filter (\e -> e.id == id) Effect.Types.all
 
@@ -72,7 +72,7 @@ viewField effectIdx values field =
         ]
 
 
-viewEffectSelector : Int -> List Effect.Type -> Html Msg
+viewEffectSelector : Int -> List Effect -> Html Msg
 viewEffectSelector effectIdx types =
     select [ class "effect-type", class "u-full-width", onInput (SetType effectIdx << effectFromId) ] (List.map (\t -> option [ value t.id ] [ text t.name ]) types)
 
@@ -80,7 +80,8 @@ viewEffectSelector effectIdx types =
 viewEffect : Int -> Effect.Instance -> Html Msg
 viewEffect effectIdx effect =
     let
-        validation = Effect.validateInstance effect
+        validation =
+            Effect.validateInstance effect
     in
     section
         [ class "frame"
@@ -134,7 +135,8 @@ viewEffects effects =
                     , a
                         [ class "button"
                         , on "click" <| D.succeed RemoveEffect
-                        , disabled (List.length effects <= 1) ]
+                        , disabled (List.length effects <= 1)
+                        ]
                         [ FeatherIcons.toHtml [ height 16 ] FeatherIcons.minus ]
                     ]
                ]

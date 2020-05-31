@@ -1,17 +1,17 @@
-module Effect.Types exposing (..)
+module Effect.Types exposing (all, cut, randomize, remove, repeat, reverse, silence, swap)
 
 import Dict
-import Effect
+import Effect exposing (Effect)
 import Validate
 
 
-all : List Effect.Type
+all : List Effect
 all =
     [ swap, randomize, remove, cut, repeat, silence, reverse ]
 
 
-standardOffsetField : Effect.Field
-standardOffsetField =
+offsetField : Effect.Field
+offsetField =
     { id = "offset"
     , name = "Offset"
     , hint = Just "Number of beats to wait before applying this effect"
@@ -21,110 +21,67 @@ standardOffsetField =
     }
 
 
-swapPeriodValidator : Validate.Validator String (Dict.Dict String Int)
-swapPeriodValidator = 
-    Validate.ifTrue (\v -> Dict.get "x_period" v == Dict.get "y_period" v) "Can't swap a beat with itself! Change one of the values below."
+validateSwapPeriod : Validate.Validator String (Dict.Dict String Int)
+validateSwapPeriod =
+    Validate.ifTrue
+        (\v -> Dict.get "x_period" v == Dict.get "y_period" v)
+        "Can't swap a beat with itself! Change one of the values below."
 
-swap : Effect.Type
+
 swap =
-    { id = "swap"
-    , name = "Swap"
-    , description = "Swaps two beats throughout the entire song."
-    , params =
-        [ { id = "x_period", name = "Every", hint = Nothing, min = 1, default = 2, max = 1000 }
-        , { id = "y_period", name = "With", hint = Nothing, min = 1, default = 4, max = 1000 }
-        , standardOffsetField
-        ]
-    , extraValidation = [ swapPeriodValidator ]
-    , postValidation = identity
-    }
+    Effect.effect { id = "swap", name = "Swap", description = "Swaps two beats throughout the entire song." }
+        |> Effect.field { id = "x_period", name = "Every", hint = Nothing, min = 1, default = 2, max = 1000 }
+        |> Effect.field { id = "y_period", name = "With", hint = Nothing, min = 1, default = 4, max = 1000 }
+        |> Effect.field offsetField
+        |> Effect.validator validateSwapPeriod
 
 
-randomize : Effect.Type
+randomize : Effect
 randomize =
-    { id = "randomize"
-    , name = "Randomize"
-    , description = "Totally randomizes the order of all beats."
-    , params = []
-    , extraValidation = []
-    , postValidation = identity
-    }
+    Effect.effect { id = "randomize", name = "Randomize", description = "Totally randomizes the order of all beats." }
 
 
-remove : Effect.Type
+remove : Effect
 remove =
-    { id = "remove"
-    , name = "Remove"
-    , description = "Removes beats entirely."
-    , params =
-        [ { id = "period", name = "Every", hint = Nothing, min = 2, default = 2, max = 1000 }
-        , standardOffsetField
-        ]
-    , extraValidation = []
-    , postValidation = identity
-    }
+    Effect.effect { id = "remove", name = "Remove", description = "Removes beats entirely." }
+        |> Effect.field { id = "period", name = "Every", hint = Nothing, min = 2, default = 2, max = 1000 }
 
 
-cutIndexValidator : Validate.Validator String (Dict.Dict String Int)
-cutIndexValidator =
+validateCutIndex : Validate.Validator String (Dict.Dict String Int)
+validateCutIndex =
     Validate.ifTrue
         (\m -> (Maybe.withDefault 0 <| Dict.get "take_index" m) > (Maybe.withDefault 0 <| Dict.get "denominator" m))
         "Each beat isn't being cut into enough pieces to take that one. Try increasing the number of pieces."
 
-cut : Effect.Type
+
+cut : Effect
 cut =
-    { id = "cut"
-    , name = "Cut"
-    , description = "Cuts beats into pieces and keeps one of them (i.e. pieces = 2, piece to keep = 2 takes the second half of each beat)."
-    , params =
-        [ { id = "period", name = "Every", hint = Nothing, min = 1, default = 2, max = 1000 }
-        , standardOffsetField
-        , { id = "denominator", name = "Pieces", hint = Nothing, min = 2, default = 2, max = 1000 }
-        , { id = "take_index", name = "Piece to Keep", hint = Nothing, min = 1, default = 1, max = 1000 }
-        ]
-    , extraValidation = [cutIndexValidator]
-    , postValidation = Dict.update "take_index" (Maybe.map (\i -> i - 1))
-    }
+    Effect.effect { id = "cut", name = "Cut", description = "Cuts beats into pieces and keeps one of them (i.e. pieces = 2, piece to keep = 2 takes the second half of each beat)." }
+        |> Effect.field { id = "period", name = "Every", hint = Nothing, min = 1, default = 2, max = 1000 }
+        |> Effect.field offsetField
+        |> Effect.field { id = "denominator", name = "Pieces", hint = Nothing, min = 2, default = 2, max = 1000 }
+        |> Effect.field { id = "take_index", name = "Piece to Keep", hint = Nothing, min = 1, default = 1, max = 1000 }
+        |> Effect.validator validateCutIndex
+        |> Effect.finally (Dict.update "take_index" (Maybe.map (\i -> i - 1)))
 
 
-repeat : Effect.Type
+repeat : Effect
 repeat =
-    { id = "repeat"
-    , name = "Repeat"
-    , description = "Repeat beats a certain number of times."
-    , params =
-        [ { id = "period", name = "Every", hint = Nothing, min = 1, default = 2, max = 1000 }
-        , standardOffsetField
-        , { id = "times", name = "Times", hint = Nothing, min = 1, default = 2, max = 1000 }
-        ]
-    , extraValidation = []
-    , postValidation = identity
-    }
+    Effect.effect { id = "repeat", name = "Repeat", description = "Repeat beats a certain number of times." }
+        |> Effect.field { id = "period", name = "Every", hint = Nothing, min = 1, default = 2, max = 1000 }
+        |> Effect.field offsetField
+        |> Effect.field { id = "times", name = "Times", hint = Nothing, min = 1, default = 2, max = 1000 }
 
 
-silence : Effect.Type
+silence : Effect
 silence =
-    { id = "silence"
-    , name = "Silence"
-    , description = "Silences beats, but retains their length."
-    , params =
-        [ { id = "period", name = "Every", hint = Nothing, min = 2, default = 2, max = 1000 }
-        , standardOffsetField
-        ]
-    , extraValidation = []
-    , postValidation = identity
-    }
+    Effect.effect { id = "silence", name = "Silence", description = "Silences beats, but retains their length." }
+        |> Effect.field { id = "period", name = "Every", hint = Nothing, min = 2, default = 2, max = 1000 }
+        |> Effect.field offsetField
 
 
-reverse : Effect.Type
+reverse : Effect
 reverse =
-    { id = "reverse"
-    , name = "Reverse"
-    , description = "Reverses individual beats."
-    , params =
-        [ { id = "period", name = "Every", hint = Nothing, min = 1, default = 2, max = 1000 }
-        , standardOffsetField
-        ]
-    , extraValidation = []
-    , postValidation = identity
-    }
+    Effect.effect { id = "reverse", name = "Reverse", description = "Reverses individual beats." }
+        |> Effect.field { id = "period", name = "Every", hint = Nothing, min = 1, default = 2, max = 1000 }
+        |> Effect.field offsetField

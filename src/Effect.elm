@@ -1,13 +1,15 @@
-module Effect exposing (Instance, Type, Field, defaultValues, instanceValidator, validateAll, validateInstance)
+module Effect exposing (Field, Instance, Effect, defaultValues, instanceValidator, validateAll, validateInstance, effect, field, validator, finally)
 
 import Dict exposing (Dict)
 import Validate exposing (Validator)
 
 
+
 -- MODELS
 
 
-{-| A Field is a ranged integer parameter for an effect. -}
+{-| A Field is a ranged integer parameter for an effect.
+-}
 type alias Field =
     { id : String
     , name : String
@@ -21,39 +23,62 @@ type alias Field =
 {-| A Type is a class of effect, defined by a set of fields and optionally
 custom validation and serialization logic.
 -}
-type alias Type =
+type alias Effect =
     { name : String
     , description : String
     , id : String
     , params : List Field
-    , extraValidation : List (Validator String (Dict String Int))
+    , validation : List (Validator String (Dict String Int))
     , postValidation : Dict String Int -> Dict String Int
     }
 
 
+effect : { id: String, name: String, description: String } -> Effect
+effect r =
+    { name = r.name, description = r.description, id = r.id, params = [], validation = [], postValidation = identity }
+
+
+field : Field -> Effect -> Effect
+field f t =
+    { t | params = t.params ++ [ f ] }
+
+
+validator : Validator String (Dict String Int) -> Effect -> Effect
+validator v t =
+    { t | validation = t.validation ++ [ v ] }
+
+
+finally : (Dict String Int -> Dict String Int) -> Effect -> Effect
+finally f t =
+    { t | postValidation = f }
+
+
 {-| An Instance is a Type coupled with a Dict.Dict representing the values of
 each Field. Instances should be used with caution, because they may or may not
-be constructed correctly. To ensure a proper instance is passed, require a 
+be constructed correctly. To ensure a proper instance is passed, require a
 `Validate.Valid Instance`.
 -}
 type alias Instance =
-    { type_ : Type
+    { type_ : Effect
     , values : Dict.Dict String Int
     }
 
 
-{-| Retrieves the default values for the given effect type. -}
-defaultValues : Type -> Dict String Int
+{-| Retrieves the default values for the given effect type.
+-}
+defaultValues : Effect -> Dict String Int
 defaultValues i =
     i.params
-    |> List.map (\p -> ( p.id, p.default ))
-    |> Dict.fromList
+        |> List.map (\p -> ( p.id, p.default ))
+        |> Dict.fromList
+
 
 
 -- VALIDATION
 
 
-{-| A validator for checking if a field is within its defined range in an instance. -}
+{-| A validator for checking if a field is within its defined range in an instance.
+-}
 rangeValidator : Field -> Validator String Instance
 rangeValidator f =
     Validate.ifTrue
@@ -66,27 +91,29 @@ rangeValidator f =
                     True
         )
         ("The value for setting \""
-        ++ f.name
-        ++ "\" is out of range. Put it in the range ["
-        ++ String.fromInt f.min
-        ++ ", "
-        ++ String.fromInt f.max
-        ++ "]."
+            ++ f.name
+            ++ "\" is out of range. Put it in the range ["
+            ++ String.fromInt f.min
+            ++ ", "
+            ++ String.fromInt f.max
+            ++ "]."
         )
 
 
-{-| A validator for checking if a field is present in an instance. -}
+{-| A validator for checking if a field is present in an instance.
+-}
 presenceValidator : Field -> Validator String Instance
 presenceValidator f =
     Validate.ifNothing (\i -> Dict.get f.id i.values) ("Missing field " ++ f.id)
 
 
-{-| A validator that applies any type-specific checks for an instance. -}
-typeSpecificValidator : Type -> Validator String Instance
+{-| A validator that applies any type-specific checks for an instance.
+-}
+typeSpecificValidator : Effect -> Validator String Instance
 typeSpecificValidator t =
     Validate.fromErrors
         (\i ->
-            case Validate.validate (Validate.all t.extraValidation) i.values of
+            case Validate.validate (Validate.all t.validation) i.values of
                 Ok _ ->
                     []
 
@@ -95,13 +122,14 @@ typeSpecificValidator t =
         )
 
 
-{-| A validator that runs all necessary checks on an instance and its fields. -}
-instanceValidator : Type -> Validator String Instance
+{-| A validator that runs all necessary checks on an instance and its fields.
+-}
+instanceValidator : Effect -> Validator String Instance
 instanceValidator t =
-    [typeSpecificValidator t]
-    |> (++) (List.map presenceValidator t.params)
-    |> (++) (List.map rangeValidator t.params)
-    |> Validate.all
+    [ typeSpecificValidator t ]
+        |> (++) (List.map presenceValidator t.params)
+        |> (++) (List.map rangeValidator t.params)
+        |> Validate.all
 
 
 {-| Validates an instance, returning a list of human-friendly errors or a
