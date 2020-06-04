@@ -28,6 +28,7 @@ validateSwapPeriod =
         "Can't swap a beat with itself! Change one of the values below."
 
 
+swap : Effect
 swap =
     Effect.effect { id = "swap", name = "Swap", description = "Swaps two beats throughout the entire song." }
         |> Effect.field { id = "x_period", name = "Every", hint = Nothing, min = 1, default = 2, max = 1000 }

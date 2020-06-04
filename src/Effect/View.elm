@@ -1,7 +1,7 @@
 module Effect.View exposing (Msg, update, viewEffects)
 
 import Dict
-import Effect
+import Effect exposing (Effect)
 import Effect.Types
 import FeatherIcons
 import Html exposing (..)
@@ -36,7 +36,7 @@ update msg effects =
         SetType idx maybeNewType ->
             case maybeNewType of
                 Just newType ->
-                    replace idx (\_ -> { type_ = newType, values = Effect.defaultValues newType }) effects
+                    replace idx (\_ -> { type_ = newType, values = Effect.defaults newType }) effects
 
                 Nothing ->
                     effects
@@ -45,7 +45,7 @@ update msg effects =
             replace idx (\d -> { d | values = Dict.update paramId (\m -> Maybe.map (\_ -> newValue) m) d.values }) effects
 
         AddEffect ->
-            effects ++ [ { type_ = Effect.Types.swap, values = Effect.defaultValues Effect.Types.swap } ]
+            effects ++ [ { type_ = Effect.Types.swap, values = Effect.defaults Effect.Types.swap } ]
 
         RemoveEffect ->
             List.take (List.length effects - 1) effects

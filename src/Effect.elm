@@ -1,4 +1,4 @@
-module Effect exposing (Field, Instance, Effect, defaultValues, instanceValidator, validateAll, validateInstance, effect, field, validator, finally)
+module Effect exposing (Field, Instance, Effect, defaults, instanceValidator, validateAll, validateInstance, effect, field, validator, finally)
 
 import Dict exposing (Dict)
 import Validate exposing (Validator)
@@ -66,9 +66,9 @@ type alias Instance =
 
 {-| Retrieves the default values for the given effect type.
 -}
-defaultValues : Effect -> Dict String Int
-defaultValues i =
-    i.params
+defaults : Effect -> Dict String Int
+defaults e =
+    e.params
         |> List.map (\p -> ( p.id, p.default ))
         |> Dict.fromList
 
@@ -109,8 +109,8 @@ presenceValidator f =
 
 {-| A validator that applies any type-specific checks for an instance.
 -}
-typeSpecificValidator : Effect -> Validator String Instance
-typeSpecificValidator t =
+effectValidator : Effect -> Validator String Instance
+effectValidator t =
     Validate.fromErrors
         (\i ->
             case Validate.validate (Validate.all t.validation) i.values of
@@ -126,7 +126,7 @@ typeSpecificValidator t =
 -}
 instanceValidator : Effect -> Validator String Instance
 instanceValidator t =
-    [ typeSpecificValidator t ]
+    [ effectValidator t ]
         |> (++) (List.map presenceValidator t.params)
         |> (++) (List.map rangeValidator t.params)
         |> Validate.all

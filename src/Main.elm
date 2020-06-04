@@ -414,7 +414,7 @@ init flags =
       , inputMode = File
       , settings = Nothing
       , effects =
-            [ { type_ = Effect.Types.swap, values = Effect.defaultValues Effect.Types.swap }
+            [ { type_ = Effect.Types.swap, values = Effect.defaults Effect.Types.swap }
             ]
       , processing = NotStarted
       , tagline = ""
