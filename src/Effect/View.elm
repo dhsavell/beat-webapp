@@ -82,9 +82,8 @@ viewEffect effectIdx effect =
     let
         validation = Effect.validateInstance effect
     in
-    section
-        [ class "frame"
-        , classList
+    figure
+        [ classList
             [ ( "error"
               , case validation of
                     Err _ ->
@@ -95,7 +94,7 @@ viewEffect effectIdx effect =
               )
             ]
         ]
-        [ h5 [] [ text <| String.fromInt (effectIdx + 1) ++ ". " ++ effect.type_.name ]
+        [ h3 [] [ text <| String.fromInt (effectIdx + 1) ++ ". " ++ effect.type_.name ]
         , case validation of
             Ok _ ->
                 text ""
@@ -122,7 +121,7 @@ viewEffect effectIdx effect =
 
 viewEffects : List Effect.Instance -> Html Msg
 viewEffects effects =
-    div [ class "container" ]
+    div [ ]
         (List.indexedMap viewEffect effects
             ++ [ div [ class "effect-controls" ]
                     [ a

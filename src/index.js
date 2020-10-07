@@ -1,5 +1,5 @@
 require("./index.html");
-import css from "./style.css";
+require("./style.scss");
 
 const Elm = require("./Main.elm").Elm;
 const app = Elm.Main.init({

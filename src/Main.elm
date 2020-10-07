@@ -197,7 +197,7 @@ update msg model =
 
 viewInfo : Model -> Html Msg
 viewInfo model =
-    section []
+    header []
         [ h1 [ class "one-word-per-line" ] [ text "The Beat Machine" ]
         , h3 [ class "tagline", onClick RandomizeTagline ] [ text model.tagline ]
         , p [] [ text "Ever wondered what your favorite song sounds like with every other beat missing? No? Well, either way, now you can find out! The Beat Machine is a webapp for making beat edits to songs." ]
@@ -206,38 +206,37 @@ viewInfo model =
 
 viewSongSelector : Model -> Html Msg
 viewSongSelector model =
-    section [ class "frame" ]
-        [ h3 [] [ text "Song" ]
-        , p [] [ text "Choose and configure a song. Shorter songs process faster!" ]
-        , div [ class "row" ]
-            [ div [ class "four", class "columns" ]
-                [ label [] [ text "Source" ]
-                , label []
-                    [ input
-                        [ onClick (ChangeInputMode File)
-                        , type_ "radio"
-                        , name "input-mode"
-                        , checked (model.inputMode == File)
-                        ]
-                        []
-                    , span [ class "label-body" ] [ text "MP3 File" ]
+    section []
+        [ h2 [] [ text "Song" ]
+        , p [] [ text "Choose a song to remix. Shorter songs process faster!" ]
+        , figure [ class "song-upload" ]
+            [ div [ class "song-source" ]
+                [ h3 []
+                    [ text "Source" ]
+                , input
+                    [ onClick (ChangeInputMode File)
+                    , type_ "radio"
+                    , name "input-mode"
+                    , id "song-source-file"
+                    , checked (model.inputMode == File)
                     ]
-                , label []
-                    [ input
-                        [ onClick (ChangeInputMode Url)
-                        , type_ "radio"
-                        , name "input-mode"
-                        , checked (model.inputMode == Url)
-                        ]
-                        []
-                    , span [ class "label-body" ] [ text "YouTube Video" ]
+                    []
+                , label [ for "song-source-file" ] [ text "MP3 File" ]
+                , input
+                    [ onClick (ChangeInputMode Url)
+                    , type_ "radio"
+                    , name "input-mode"
+                    , id "song-source-video"
+                    , checked (model.inputMode == Url)
                     ]
+                    []
+                , label [ for "song-source-video" ] [ text "YouTube Video" ]
                 ]
-            , div [ class "eight", class "columns" ]
+            , div [ class "song-input" ]
                 [ case model.inputMode of
                     File ->
                         div []
-                            [ label [] [ text "Select file" ]
+                            [ h3 [] [ text "Select file" ]
                             , input
                                 [ type_ "file"
                                 , multiple False
@@ -249,20 +248,18 @@ viewSongSelector model =
 
                     Url ->
                         div []
-                            [ label [] [ text "Paste YouTube video URL" ]
+                            [ h3 [] [ text "Paste YouTube video URL" ]
                             , input
                                 [ type_ "url"
                                 , class "u-full-width"
                                 , onInput SetSongUrl
                                 ]
                                 []
-                            , p [] [ text "Not all videos can be downloaded. If you run into issues, try using an MP3 instead." ]
                             ]
                 ]
             ]
-        , br [] []
-        , p [] [ text "The following settings are optional, but let you fine-tune the result if it's not what you expected. When using live performances or songs with tempo changes, be sure to set a high enough tolerance." ]
-        , div [ class "row" ]
+        , p [] [ text "The following optional parameters let you fine-tune the result." ]
+        , figure [ ]
             [ div [ class "four", class "columns" ]
                 [ label []
                     [ input
@@ -334,8 +331,8 @@ loader =
 
 viewResult : Model -> Html Msg
 viewResult model =
-    section [ class "frame" ]
-        [ h3 [] [ text "Result" ]
+    section []
+        [ h2 [] [ text "Result" ]
         , p [] [ text "Press the button to render the result! This will take a moment." ]
         , div [ class "render-button-container" ]
             [ button
@@ -377,17 +374,15 @@ viewResult model =
 view : Model -> Html Msg
 view model =
     div
-        [ class "container"
-        , class "app"
-        ]
+        [ class "app" ]
         [ Common.Content.viewNavbar
         , viewInfo model
         , viewSongSelector model
-        , section [ class "frame" ]
-            [ h3 [] [ text "Effects" ]
-            , p [] [ text "Add up to 5 sequential effects to rearrange your song. "
-            , a [ href "https://github.com/beat-machine/beat-webapp/issues/31#issuecomment-622649410", target "_blank" ]
-                [ text "We're working on improving this process, but for now here's some more info about how it works." ] ]
+        , section []
+            [ h2 [] [ text "Effects" ]
+            , p []
+                [ text "Add up to 5 effects to rearrange your song. Beats are re-numbered after every effect, so, for example, swapping beats 2 and 4 twice will have no net result."
+                ]
             , Html.map EffectMsg (Effect.View.viewEffects model.effects)
             ]
         , viewResult model

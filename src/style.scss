@@ -1,0 +1,111 @@
+@import "~normalize.css";
+@import url("https://fonts.googleapis.com/css2?family=Source+Code+Pro&family=Source+Sans+Pro&display=swap");
+
+$color-bg: #121219;
+$color-bg-grid: #1a1a20;
+$color-fg: #eee;
+
+body {
+  background-color: $color-bg;
+  background-size: 20px 20px;
+  background-image: linear-gradient(
+      to right,
+      $color-bg-grid 1px,
+      transparent 1px
+    ),
+    linear-gradient(to bottom, $color-bg-grid 1px, transparent 1px);
+  color: $color-fg;
+  margin-left: 4em;
+  margin-right: 4em;
+  max-width: 100%;
+  line-height: 1.4em;
+  font-family: "Source Sans Pro", sans-serif;
+}
+
+@media (min-width: 800px) {
+  body {
+    margin-left: 25%;
+    margin-right: 25%;
+  }
+}
+
+.app {
+  margin-top: 12%;
+  margin-bottom: 15%;
+}
+
+nav {
+  margin-bottom: 4em;
+  background-color: $color-fg;
+  padding: 0.8em;
+}
+
+header {
+  margin-bottom: 4em;
+}
+
+h1,
+h2,
+h3 {
+  margin-top: 1.1rem;
+  font-family: "Source Code Pro", sans-serif;
+}
+
+h1 {
+  font-size: 3.5rem;
+}
+
+h2 {
+  font-size: 2.5rem;
+}
+
+h3 {
+  font-size: 1.15rem;
+}
+
+figure {
+  margin-top: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+figure h3 {
+  margin-top: 0;
+}
+
+section {
+  padding-bottom: 2em;
+  margin-bottom: 2em;
+}
+
+@media (min-width: 800px) {
+  section {
+    background-color: $color-bg;
+    border: 5px solid $color-fg;
+    padding: 2rem 2.5rem 2rem 2.5rem;
+    margin-bottom: 2em;
+    box-shadow: 10px 10px $color-fg;
+  }
+
+  section.error {
+    border: 5px solid var(--error);
+    box-shadow: 10px 10px var(--error);
+  }
+}
+
+.song-upload {
+  display: grid;
+  grid-template-columns: 12em auto;
+}
+
+input[type="radio"] {
+  margin-right: 1em;
+}
+
+.song-upload label {
+  line-height: 1.5em;
+}
+
+.song-upload label:after {
+  content: "\a";
+  white-space: pre;
+}
